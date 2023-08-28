@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:testproject/components/barrier.dart';
 import 'package:testproject/components/bird.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,6 +25,16 @@ class _HomePageState extends State<HomePage> {
   //game settings
   bool gameHasStarted = false;
 
+  //barrier variables
+  static List<double> barrierX = [2, 2 + 1.5];
+  static double barrierWidth = 0.5; //out of 2
+  List<List<double>> barrierHeight = [
+    // out of 2, where 2 is the entire height of the screen
+    //[topHeight, bottomHeight]
+    [0.6, 0.4],
+    [0.4, 0.6]
+  ];
+
   void startGame() {
     gameHasStarted = true;
     Timer.periodic(Duration(milliseconds: 10), (timer) {
@@ -42,6 +53,9 @@ class _HomePageState extends State<HomePage> {
         _showDialog();
       }
 
+      //keep the map moving
+      moveMap();
+
       print(birdY);
       //keep the time going
       time += 0.01;
@@ -55,7 +69,15 @@ class _HomePageState extends State<HomePage> {
     }
 
     //check if bird is hitting barriers
-
+    //check if bird is whitin x coordinates and y coordinates of the barriers
+    for (int i = 0; i < barrierX.length; i++) {
+      if (barrierX[i] <= birdWidth &&
+          barrierX[i] + birdWidth >= -birdHeight &&
+          (birdY <= -1 + barrierHeight[i][0] ||
+              birdY + birdHeight >= 1 - barrierHeight[i][1])) {
+        return true;
+      }
+    }
     return false;
   }
 
@@ -74,6 +96,20 @@ class _HomePageState extends State<HomePage> {
       time = 0;
       intialpos = birdY;
     });
+  }
+
+  void moveMap() {
+    for (int i = 0; i < barrierX.length; i++) {
+      //keep barrier moving
+      setState(() {
+        barrierX[i] -= 0.005;
+      });
+
+      //if barrier exists the left part of the screen , keeps it looping
+      if (barrierX[i] < 1.5) {
+        barrierX[i] += 3;
+      }
+    }
   }
 
   void _showDialog() {
@@ -121,7 +157,42 @@ class _HomePageState extends State<HomePage> {
                 child: Center(
                     child: Stack(
                   children: [
-                    MyBird(birdY),
+                    MyBird(
+                      birdY,
+                      birdHeight: birdHeight,
+                      birdWidth: birdWidth,
+                    ),
+
+                    //tap to play
+                    // MyCoverScreen(gameHasStarted: gameHasStarted),
+
+                    //top barrier 0
+                    MyBarrier(
+                        barrierHeight: barrierHeight[0][0],
+                        barrierWidth: barrierWidth,
+                        barrierX: barrierX[0],
+                        isThisBottomBarrier: false),
+
+                    //Bottom Barrier 0
+                    MyBarrier(
+                        barrierHeight: barrierHeight[0][1],
+                        barrierWidth: barrierWidth,
+                        barrierX: barrierX[0],
+                        isThisBottomBarrier: true),
+
+                    //top barrier 1
+                    MyBarrier(
+                        barrierHeight: barrierHeight[1][0],
+                        barrierWidth: barrierWidth,
+                        barrierX: barrierX[1],
+                        isThisBottomBarrier: false),
+
+                    //Bottom Barrier 1
+                    MyBarrier(
+                        barrierHeight: barrierHeight[1][1],
+                        barrierWidth: barrierWidth,
+                        barrierX: barrierX[1],
+                        isThisBottomBarrier: true),
                     Container(
                       alignment: Alignment(0, -0.5),
                       child: Text(
